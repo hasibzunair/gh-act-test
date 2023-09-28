@@ -16,6 +16,8 @@ jobs:
         run: npm test
   # Another job
   deploy:
+    # If previous job passes, only run this job
+    needs: test
     # every job has its own runner, its own vm that is isolated from other
     # machines and jobs.
     runs-on: ubuntu-latest
