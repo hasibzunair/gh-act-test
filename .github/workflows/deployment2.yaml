@@ -13,18 +13,19 @@ jobs:
       - name: Lint
         run: npm run lint
   test:
-      runs-on: ubuntu-latest
-      steps:
-        # get code in gh machine
-        - name: Get code
-          uses: actions/checkout@v3
-        # install dependencies
-        - name: Install libs
-          run: npm ci
-        - name: Lint
-          run: npm run lint
-        - name: Test code
-          run: npm run test
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      # get code in gh machine
+      - name: Get code
+        uses: actions/checkout@v3
+      # install dependencies
+      - name: Install libs
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Test code
+        run: npm run test
   deploy:
     runs-on: ubuntu-latest
     steps:
