@@ -38,6 +38,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      # Download job artifacts
       - name: Get build artifact from build job
         uses: actions/download-artifact@v3
         with:
