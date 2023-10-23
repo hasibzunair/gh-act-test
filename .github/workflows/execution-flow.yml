@@ -38,8 +38,8 @@ jobs:
         run: npm run test
       # If run test step failed, upload test report. If it didn't, skip uploading report
       - name: Upload test report
-        # if previous step fails, do sth
-        if: steps.run-tests.outcome == 'failure'
+        # if any step fails and run test setps fails, do sth
+        if: failure() && steps.run-tests.outcome == 'failure'
         uses: actions/upload-artifact@v3
         with:
           name: test-report
