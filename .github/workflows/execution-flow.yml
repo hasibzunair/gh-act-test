@@ -15,9 +15,9 @@ jobs:
         with:
           path: ~/.npm
           key: deps-node-modules-${{ hashFiles('**/package-lock.json') }}
+      # Install, if cache was used. If not, manually install
       - name: Install dependencies
-        # Install, if cache was used. If not, manually install
-        #if: steps.cache.outputs.cache-hit != 'true' 
+        if: steps.cache.outputs.cache-hit != 'true' 
         run: npm ci
       - name: Lint code
         run: npm run lint
