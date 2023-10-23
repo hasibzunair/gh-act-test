@@ -36,6 +36,7 @@ jobs:
         run: npm ci
       - name: Test code
       # New condition
+        # Use continue-on-error if you want workflow to continue even if a step fails
         continue-on-error: true # job should continue even if this fails
         id: run-tests
         run: npm run test

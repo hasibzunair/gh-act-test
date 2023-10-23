@@ -1,0 +1,22 @@
+name: Matrix Demo
+on: push
+jobs:
+  build:
+    # Use multiple values for a config
+    # This step run paralelly with diff configs
+    strategy:
+      matrix:
+        node-version: [12, 14, 16]
+        operating-system: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.operating-system }}
+    steps:
+      - name: Get code
+        uses: actions/checkout@v3
+      - name: Install JodeJS
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Install dep
+        run: npm ci
+      - name: Build project
+        run: npm run build
