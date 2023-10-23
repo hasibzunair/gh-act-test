@@ -2,6 +2,7 @@ name: Matrix Demo
 on: push
 jobs:
   build:
+    continue-on-error: true # dont cancel the job if any step fails
     # Use multiple values for a config
     # This step run paralelly with diff configs
     strategy:
