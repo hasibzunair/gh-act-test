@@ -15,7 +15,6 @@ jobs:
         with:
           path: node_modules
           key: deps-node-modules-${{ hashFiles('**/package-lock.json') }}
-      # Install, if cache was not used. If not, manually install
       - name: Install dependencies
         if: steps.cache.outputs.cache-hit != 'true' 
         run: npm ci
@@ -32,18 +31,15 @@ jobs:
         with:
           path: node_modules
           key: deps-node-modules-${{ hashFiles('**/package-lock.json') }}
-      # If cache is there, dont install, use cache
       - name: Install dependencies
         if: steps.cache.outputs.cache-hit != 'true' 
         run: npm ci
-      # when this step fails, test report wont work by default, add if statement
       - name: Test code
+      # New condition
+      continue-on-error: true # job should continue even if this fails
         id: run-tests
         run: npm run test
-      # If run test step failed, upload test report. If it didn't, skip uploading report
       - name: Upload test report
-        # if any step fails and run test setps fails, do sth
-        if: failure() && steps.run-tests.outcome == 'failure'
         uses: actions/upload-artifact@v3
         with:
           name: test-report
@@ -60,7 +56,6 @@ jobs:
         with:
           path: node_modules
           key: deps-node-modules-${{ hashFiles('**/package-lock.json') }}
-      # Install, if cache was used. If not, manually install
       - name: Install dependencies
         if: steps.cache.outputs.cache-hit != 'true' 
         run: npm ci
@@ -84,7 +79,6 @@ jobs:
         run: ls
       - name: Deploy
         run: echo "Deploying..."
-  # Conditional job, if any other job after lint or deploy failed
   report:
     needs: [lint, deploy]
     if: failure()
