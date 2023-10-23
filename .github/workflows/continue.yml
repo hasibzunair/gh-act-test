@@ -36,7 +36,7 @@ jobs:
         run: npm ci
       - name: Test code
       # New condition
-      continue-on-error: true # job should continue even if this fails
+        continue-on-error: true # job should continue even if this fails
         id: run-tests
         run: npm run test
       - name: Upload test report
