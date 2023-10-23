@@ -67,8 +67,12 @@ jobs:
           name: dist-files
           path: dist
   deploy:
+    # define workflow
     needs: build
     uses: ./.github/workflows/reusable.yml
+    with: 
+      # add filename to new workflow
+      artifact-name: dist-files
   report:
     needs: [lint, deploy]
     if: failure()
