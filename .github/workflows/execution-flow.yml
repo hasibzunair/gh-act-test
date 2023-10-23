@@ -78,8 +78,9 @@ jobs:
         run: ls
       - name: Deploy
         run: echo "Deploying..."
-  # Conditional job
+  # Conditional job, if any other job after lint or deploy failed
   report:
+    needs: [lint, deploy]
     if: failure()
     runs-on: ubuntu-latest
     steps:
