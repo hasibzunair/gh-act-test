@@ -1,4 +1,3 @@
-# Custom composite action .github/actions/cached-deps/action.yml
 name: 'Get and cache deps'
 description: 'Get the deps via npm and cache them'
 runs:
