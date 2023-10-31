@@ -43,4 +43,4 @@ jobs:
       #     python -m pip install torch==${{ matrix.torch-version }} torchvision
 
       - name: Run the tests
-        run: pytest
+        run: "python -m pytest ./test"
