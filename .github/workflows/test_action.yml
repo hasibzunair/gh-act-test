@@ -1,4 +1,4 @@
-name: Test custom action
+name: Test custom workflow
 
 on: [push]
 
@@ -16,7 +16,7 @@ jobs:
         uses: ./.github/actions/ # Uses an action in the root directory
         # or use a released GitHub Action
         with:
-          num: 11
+          num: 10
       
       - name: Print the square
         run: echo "${{ steps.get_square.outputs.num_squared }}"
