@@ -41,6 +41,12 @@ jobs:
       #   run: |
       #     echo "Installing torch ${{ matrix.torch-version }}"
       #     python -m pip install torch==${{ matrix.torch-version }} torchvision
+      
+      # - name: Lint with Ruff
+      #   run: |
+      #     pip install ruff
+      #     ruff --output-format=github .
+      #   continue-on-error: true
 
       - name: Run the tests
         run: "python -m pytest ./test"
