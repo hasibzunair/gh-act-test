@@ -4,6 +4,18 @@ name: 'Custom Github Action'
 
 description: 'A Github Action that takes an input and returns the square of the number'
 
+inputs:
+  num:
+    description: 'Enter a number'
+    required: true
+    default: "1"
+
+outputs:
+  num_squared:
+    description: 'Square of the input'
+    # need to specify the extra `value` field for `composite` actions
+    value: ${{ steps.get-square.outputs.num_squared }}
+
 runs:
   using: 'composite' # Docker, Javascript, and Composite
   steps:
