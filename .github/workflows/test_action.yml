@@ -1,3 +1,5 @@
+# Workflow using a custom action.yml
+
 name: Test custom workflow
 
 on: [push]
