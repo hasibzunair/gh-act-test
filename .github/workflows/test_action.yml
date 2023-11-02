@@ -18,7 +18,7 @@ jobs:
         uses: ./.github/actions/ # Uses an action in the root directory
         # or use a released GitHub Action
         with:
-          num: 10
+          num: 100
       
       - name: Print the square
         run: echo "${{ steps.get_square.outputs.num_squared }}"
