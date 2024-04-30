@@ -1,0 +1,114 @@
+name: build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [ opened, synchronize, reopened ]
+
+jobs:
+  builds:
+    strategy:
+      matrix:
+        directory: [
+          "frontend",
+          "backend"
+        ]
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
+    timeout-minutes: 20
+    name: ${{ matrix.directory }}
+    runs-on: [self-hosted, decathlon]
+    env:
+      DOCKER_TAG: ${{ (github.event_name == 'pull_request' && (format('PR-{0}-', github.event.pull_request.number))) }}${{ github.sha }}
+    steps:
+    - name: pre/post clean
+      uses: dktunited/.github/actions/cleaner@main
+
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - id: 'gar-auth'
+      name: 🔐 Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        token_format: 'access_token'
+        workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+        service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+
+    - name: 🔐 Login to Google Artifact Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ vars.GCP_REGISTRY }}
+        username: oauth2accesstoken
+        password: ${{ steps.gar-auth.outputs.access_token }}
+    
+    - name: Export environment variables for frontend
+      if: ${{ matrix.directory == 'frontend' }}
+      run: |
+          echo "VUE_APP_SVAPI_KEY=${{ vars.VUE_APP_SVAPI_KEY }}" > ${{ matrix.directory }}/.env
+          echo "VUE_APP_BACKEND_URL=${{ vars.VUE_APP_BACKEND_URL }}" >> ${{ matrix.directory }}/.env
+          echo "VUE_APP_FEDID_URL=${{ vars.VUE_APP_FEDID_URL }}" >> ${{ matrix.directory }}/.env
+          echo "VUE_APP_CLIENT_SECRET=${{ vars.VUE_APP_CLIENT_SECRET }}" >> ${{ matrix.directory }}/.env
+  
+    - name: Build Container
+      uses: docker/build-push-action@v5
+      env:
+        IMAGE: ${{ vars.GCP_REGISTRY }}/${{ vars.GCP_PROJECT_ID }}/docker/${{ github.event.repository.name }}/${{ matrix.directory }}
+      with:
+        push: false
+        load: true
+        context: ./${{ matrix.directory }}/
+        tags: |
+          ${{ env.IMAGE }}:${{ env.DOCKER_TAG }}
+          ${{ (github.event_name == 'pull_request') && (format('{0}:PR-{1}', env.IMAGE, github.event.pull_request.number)) || '' }}
+          ${{ (github.ref == 'refs/heads/main') && (format('{0}:latest', env.IMAGE )) || '' }}
+        cache-from: type=registry,ref=${{ env.IMAGE }}:cache
+
+    - name: Scan Prisma
+      uses: dktunited/.github/actions/prisma@main
+      with:
+        docker-image: ${{ vars.GCP_REGISTRY }}/${{ vars.GCP_PROJECT_ID }}/docker/${{ github.event.repository.name }}/${{ matrix.directory }}:${{ env.DOCKER_TAG }}
+        prisma-user: ${{secrets.PRISMA_USER}}
+        prisma-pass: ${{secrets.PRISMA_PASS}}
+
+    - name: Push on GAR
+      uses: docker/build-push-action@v5
+      env:
+        IMAGE: ${{ vars.GCP_REGISTRY }}/${{ vars.GCP_PROJECT_ID }}/docker/${{ github.event.repository.name }}/${{ matrix.directory }}
+      with:
+        push: true
+        context: ./${{ matrix.directory }}/
+        tags: |
+          ${{ env.IMAGE }}:${{ env.DOCKER_TAG }}
+          ${{ (github.event_name == 'pull_request') && (format('{0}:PR-{1}', env.IMAGE, github.event.pull_request.number)) || '' }}
+          ${{ (github.ref == 'refs/heads/main') && (format('{0}:latest', env.IMAGE )) || ''}}
+        cache-from: type=registry,ref=${{ env.IMAGE }}:cache
+
+  notify:
+    name: Notify tags
+    runs-on: [self-hosted, decathlon]
+    timeout-minutes: 20
+    needs: [builds]
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
+    env:
+      DOCKER_TAG: ${{ (github.event_name == 'pull_request' && (format('PR-{0}-', github.event.pull_request.number))) }}${{ github.sha }}
+    steps:
+      - name: write on PR 
+        uses: thollander/actions-comment-pull-request@v2
+        if: ${{ github.event_name == 'pull_request' }}
+        with:
+          message: |
+            Build is success with the tag ${{ env.DOCKER_TAG }}
+          reactions: rocket
+          comment_tag: container_tag
+          mode: recreate
